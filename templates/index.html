@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI/ML Trading Signal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="background"></div>
+
+    <div class="container">
+        <div class="glass-card">
+            <h1>📊 AI/ML Trading Signal App</h1>
+            <p class="subtitle">Live market data with SmartAPI and machine learning prediction</p>
+
+            <form action="/predict" method="post">
+                <button type="submit" class="glow-btn">Get Live Signal</button>
+            </form>
+
+            {% if price %}
+            <div class="result-card price-card">
+                <h2>Live Price</h2>
+                <p>₹ {{ price }}</p>
+            </div>
+            {% endif %}
+
+            {% if signal %}
+            <div class="result-card signal-card">
+                <h2>Prediction</h2>
+                <p>{{ signal }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
