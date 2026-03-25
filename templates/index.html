@@ -1,37 +1,326 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI/ML Trading Signal</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NIFTY AI Predictor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="background"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-grid"></div>
 
-    <div class="container">
-        <div class="glass-card">
-            <h1>📊 AI/ML Trading Signal App</h1>
-            <p class="subtitle">Live market data with SmartAPI and machine learning prediction</p>
-
-            <form action="/predict" method="post">
-                <button type="submit" class="glow-btn">Get Live Signal</button>
-            </form>
-
-            {% if price %}
-            <div class="result-card price-card">
-                <h2>Live Price</h2>
-                <p>₹ {{ price }}</p>
-            </div>
-            {% endif %}
-
-            {% if signal %}
-            <div class="result-card signal-card">
-                <h2>Prediction</h2>
-                <p>{{ signal }}</p>
-            </div>
-            {% endif %}
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">📈</div>
+        <div>
+          <h2>NIFTY AI</h2>
+          <p>1H Analysis + 15M Signal</p>
         </div>
-    </div>
+      </div>
+
+      <div class="side-card">
+        <span class="mini-label">Market</span>
+        <h3>NIFTY 50</h3>
+        <p>Live SmartAPI dashboard with trend analysis and signal engine.</p>
+      </div>
+
+      <div class="side-card">
+        <span class="mini-label">Trend</span>
+        <h3 id="trend1h">SIDEWAYS</h3>
+        <p>Higher timeframe bias from 1 hour candles</p>
+      </div>
+
+      <div class="side-card">
+        <span class="mini-label">Update Cycle</span>
+        <h3>Every 15 min</h3>
+        <p>Signal refresh is automatic. You can also generate manually.</p>
+      </div>
+    </aside>
+
+    <main class="dashboard">
+      <div class="topbar glass">
+        <div>
+          <h1>NIFTY AI Predictor</h1>
+          <p>Live SmartAPI data + 1H trend + 15M entry + ML confirmation</p>
+        </div>
+        <button class="refresh-btn" id="refreshBtn">Generate Signal</button>
+      </div>
+
+      <div id="errorBox" class="error-box hidden">No error</div>
+
+      <section class="hero-grid">
+        <div class="hero-card glass">
+          <div class="card-head">
+            <span class="mini-label">Live Price</span>
+            <span class="dot live"></span>
+          </div>
+          <h2 id="livePrice">₹ --</h2>
+          <p class="muted">Current NIFTY price</p>
+        </div>
+
+        <div class="hero-card glass signal-card no-trade" id="signalCard">
+          <div class="card-head">
+            <span class="mini-label">Final Signal</span>
+            <span class="pulse-ring"></span>
+          </div>
+          <h2 id="finalSignal">NO TRADE</h2>
+          <p class="muted" id="analysisText">Waiting for live data</p>
+        </div>
+
+        <div class="hero-card glass">
+          <div class="card-head">
+            <span class="mini-label">Confidence</span>
+            <span class="badge" id="confidenceBadge">50%</span>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-bar">
+              <div class="progress-fill" id="progressFill" style="width: 50%;"></div>
+            </div>
+          </div>
+          <p class="muted">Model certainty score</p>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <div class="panel glass">
+          <div class="panel-head">
+            <h3>Trade Plan</h3>
+            <span class="updated-text" id="updatedAt">Last update: --</span>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-box">
+              <span>Rule Signal</span>
+              <strong id="ruleSignal">--</strong>
+            </div>
+            <div class="summary-box">
+              <span>ML Signal</span>
+              <strong id="mlSignal">--</strong>
+            </div>
+            <div class="summary-box">
+              <span>Entry</span>
+              <strong id="entryPrice">--</strong>
+            </div>
+            <div class="summary-box">
+              <span>Stop Loss</span>
+              <strong id="stopLoss">--</strong>
+            </div>
+            <div class="summary-box">
+              <span>Target</span>
+              <strong id="targetPrice">--</strong>
+            </div>
+            <div class="summary-box">
+              <span>Hold</span>
+              <strong id="holdTime">--</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel glass">
+          <div class="panel-head">
+            <h3>Indicator Snapshot</h3>
+            <span class="mini-status">15M + 1H</span>
+          </div>
+
+          <div class="indicator-list">
+            <div class="indicator-row">
+              <span>15M RSI</span>
+              <strong id="rsi15">--</strong>
+            </div>
+            <div class="indicator-row">
+              <span>15M EMA 9</span>
+              <strong id="ema9_15">--</strong>
+            </div>
+            <div class="indicator-row">
+              <span>15M EMA 21</span>
+              <strong id="ema21_15">--</strong>
+            </div>
+            <div class="indicator-row">
+              <span>1H RSI</span>
+              <strong id="rsi1h">--</strong>
+            </div>
+            <div class="indicator-row">
+              <span>1H EMA 21</span>
+              <strong id="ema21_1h">--</strong>
+            </div>
+            <div class="indicator-row">
+              <span>1H EMA 50</span>
+              <strong id="ema50_1h">--</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bottom-grid">
+        <div class="panel glass">
+          <div class="panel-head">
+            <h3>Recent Price Trend</h3>
+          </div>
+          <canvas id="priceChart" height="120"></canvas>
+        </div>
+
+        <div class="panel glass">
+          <div class="panel-head">
+            <h3>Analysis</h3>
+          </div>
+          <div class="insight-box">
+            <p id="insightText">Click Generate Signal to fetch the latest live data.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    let priceChart = null;
+    let isLoading = false;
+
+    function showError(message) {
+      const box = document.getElementById("errorBox");
+      box.textContent = message;
+      box.classList.remove("hidden");
+    }
+
+    function hideError() {
+      const box = document.getElementById("errorBox");
+      box.classList.add("hidden");
+    }
+
+    function buildChart(series) {
+      const canvas = document.getElementById("priceChart");
+      if (!canvas || typeof Chart === "undefined") return;
+
+      const ctx = canvas.getContext("2d");
+
+      if (priceChart) {
+        priceChart.destroy();
+      }
+
+      if (!series || series.length === 0) {
+        return;
+      }
+
+      priceChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: series.map((_, i) => i + 1),
+          datasets: [{
+            label: "Price",
+            data: series,
+            borderColor: "#22c1dc",
+            backgroundColor: "rgba(34,193,220,0.10)",
+            borderWidth: 2,
+            tension: 0.35,
+            fill: true,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            x: { display: false },
+            y: {
+              ticks: { color: "#cbd5e1" },
+              grid: { color: "rgba(255,255,255,0.06)" }
+            }
+          }
+        }
+      });
+    }
+
+    function updateSignalStyle(signal) {
+      const signalCard = document.getElementById("signalCard");
+      signalCard.classList.remove("up", "down", "no-trade");
+
+      if (signal === "UP") {
+        signalCard.classList.add("up");
+      } else if (signal === "DOWN") {
+        signalCard.classList.add("down");
+      } else {
+        signalCard.classList.add("no-trade");
+      }
+    }
+
+    function updateUI(data) {
+      document.getElementById("livePrice").textContent = `₹ ${data.live_price ?? "--"}`;
+      document.getElementById("finalSignal").textContent = data.final_signal ?? "NO TRADE";
+      document.getElementById("ruleSignal").textContent = data.rule_signal ?? "--";
+      document.getElementById("mlSignal").textContent = data.ml_signal ?? "--";
+      document.getElementById("entryPrice").textContent = data.entry ?? "--";
+      document.getElementById("stopLoss").textContent = data.stop_loss ?? "--";
+      document.getElementById("targetPrice").textContent = data.target ?? "--";
+      document.getElementById("holdTime").textContent = data.hold_time ?? "--";
+      document.getElementById("updatedAt").textContent = `Last update: ${data.updated_at ?? "--"}`;
+      document.getElementById("confidenceBadge").textContent = `${data.confidence ?? 50}%`;
+      document.getElementById("progressFill").style.width = `${data.confidence ?? 50}%`;
+      document.getElementById("trend1h").textContent = data.trend_1h ?? "SIDEWAYS";
+      document.getElementById("analysisText").textContent = data.analysis ?? "No analysis";
+      document.getElementById("insightText").textContent =
+        `${data.analysis ?? "No analysis"}. 1H trend is ${data.trend_1h ?? "SIDEWAYS"}.`;
+
+      document.getElementById("rsi15").textContent = data.rsi_15m ?? "--";
+      document.getElementById("ema9_15").textContent = data.ema9_15m ?? "--";
+      document.getElementById("ema21_15").textContent = data.ema21_15m ?? "--";
+      document.getElementById("rsi1h").textContent = data.rsi_1h ?? "--";
+      document.getElementById("ema21_1h").textContent = data.ema21_1h ?? "--";
+      document.getElementById("ema50_1h").textContent = data.ema50_1h ?? "--";
+
+      updateSignalStyle(data.final_signal ?? "NO TRADE");
+
+      if (data.price_series) {
+        buildChart(data.price_series);
+      }
+    }
+
+    async function loadSignal() {
+      if (isLoading) return;
+
+      const btn = document.getElementById("refreshBtn");
+      isLoading = true;
+      btn.disabled = true;
+      btn.textContent = "Loading...";
+
+      try {
+        const res = await fetch("/api/signal");
+        const data = await res.json();
+
+        updateUI(data);
+
+        if (data.status === "error") {
+          showError(data.message || "Live data fetch failed");
+        } else {
+          hideError();
+        }
+      } catch (err) {
+        console.error("Fetch error:", err);
+        showError("Frontend fetch error. Check terminal or browser console.");
+      } finally {
+        isLoading = false;
+        btn.disabled = false;
+        btn.textContent = "Generate Signal";
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+      const btn = document.getElementById("refreshBtn");
+      if (btn) {
+        btn.addEventListener("click", loadSignal);
+      }
+
+      loadSignal();
+      setInterval(loadSignal, 15 * 60 * 1000);
+    });
+  </script>
 </body>
-</html>
+</html>`    

@@ -1,10 +1,4 @@
-from data_fetch import get_data
-from model import predict_signal
+from app import app
 
-data = get_data()
-
-if data is not None:
-    result = predict_signal(data)
-    print("Signal:", result)
-else:
-    print("No data received")
+if __name__ == "__main__":
+    app.run(debug=True)

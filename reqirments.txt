@@ -1,0 +1,9 @@
+flask
+smartapi-python
+pyotp
+pandas
+scikit-learn
+logzero
+requests
+websocket-client
+numpy
